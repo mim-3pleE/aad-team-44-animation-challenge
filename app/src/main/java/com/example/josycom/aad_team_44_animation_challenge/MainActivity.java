@@ -1,64 +1,76 @@
 package com.example.josycom.aad_team_44_animation_challenge;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.Button;
+import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
-    private Button playButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        playButton = findViewById(R.id.playButton);
-        TextView welcomeTextView = findViewById(R.id.welcomeText);
 
-
-        //Creates the animation from the XML file and applies it to the TextView and Button
-        Animation animation3 = AnimationUtils.loadAnimation(this, R.anim.blink_animation);
-        Animation animation4 = AnimationUtils.loadAnimation(this, R.anim.move_animation);
-        playButton.startAnimation(animation3);
-        welcomeTextView.startAnimation(animation4);
+        RecyclerView quizList = findViewById(R.id.quiz_list);
+        quizList.setLayoutManager(new LinearLayoutManager(this));
+        quizList.setAdapter(new QuizListAdapter());
     }
 
-    @Override
-    protected void onResume() {
-        //Resets the colour of the Button if the user returns to the Activity
-        playButton.setBackground(getResources().getDrawable(R.drawable.green_oval));
-        super.onResume();
-    }
 
-    /**
-     * Launches the ListOfQuiz Activity.
-     */
-    public void launchListOfQuizActivity(View view) {
-        //Changes the colour of the Button when clicked
-        playButton.setBackground(getResources().getDrawable(R.drawable.oval));
-        //startActivity(new Intent(this, ListOfQuizActivity.class));
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuItem sports = menu.add(0, 1, 0, "Sport Quiz");
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
-            case 1:
-                startActivity(new Intent(this, SportQuizActivity.class));
+    private class QuizListAdapter extends RecyclerView.Adapter<QuizListViewHolder>{
+        @NonNull
+        @Override
+        public QuizListViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            return new QuizListViewHolder(LayoutInflater.from(parent.getContext()).inflate( R.layout.quiz_list_item_view, parent, false));
         }
-        return super.onOptionsItemSelected(item);
+
+        @Override
+        public void onBindViewHolder(@NonNull QuizListViewHolder holder, int position) {
+            holder.bindView(position);
+        }
+
+        @Override
+        public int getItemCount() {
+            return QuizListManager.getQuizCount();
+        }
+    }
+
+    private class QuizListViewHolder extends RecyclerView.ViewHolder {
+        TextView quizName;
+        ImageView quizImage;
+        QuizListManager.Quiz quiz;
+        QuizListViewHolder(View view){
+            super(view);
+
+            quizImage = view.findViewById(R.id.quiz_image);
+            quizName = view.findViewById(R.id.quiz_name);
+
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent questionActivityIntent = new Intent(v.getContext(), QuestionActivity.class);
+                    questionActivityIntent.putExtra("quiz", quiz);
+                    startActivity(questionActivityIntent, ActivityOptions.makeSceneTransitionAnimation(MainActivity.this).toBundle());
+                }
+            });
+        }
+
+        void bindView(int position){
+            this.quiz = QuizListManager.getQuizAt(position);
+
+            quizName.setText(quiz.getName());
+            quizImage.setImageResource(quiz.getImage());
+        }
     }
 
 }
